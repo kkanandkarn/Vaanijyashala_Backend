@@ -7,6 +7,11 @@ const district = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    stateId: {
+      type: mongoose.ObjectId,
+      ref: "state",
+      required: true,
+    },
     status: {
       type: String,
       default: "Active",

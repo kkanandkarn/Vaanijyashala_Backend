@@ -6,10 +6,7 @@ const Seller = new mongoose.Schema(
       type: mongoose.ObjectId,
       ref: "userCrendentials",
     },
-    uniqueId: {
-      type: String,
-      required: true,
-    },
+
     profileImg: {
       type: String,
     },
@@ -24,7 +21,7 @@ const Seller = new mongoose.Schema(
     mobileNumber: {
       type: String,
     },
-    altMobileNo: {
+    altMobileNumber: {
       type: String,
     },
     shopLocality: {

@@ -7,6 +7,11 @@ const state = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    districts: [
+      {
+        type: String,
+      },
+    ],
     status: {
       type: String,
       default: "Active",

@@ -26,6 +26,7 @@ const {
   userCredentials,
   session,
   sysCode,
+  globalPermissions,
 } = require("./models");
 
 const app = express();
@@ -54,20 +55,21 @@ app.use((err, req, res, next) => {
   handleError(err, res);
 });
 
-app.use(
-  count,
-  district,
-  gender,
-  otpCount,
-  otp,
-  roles,
-  seller,
-  shopType,
-  state,
-  userCredentials,
-  session,
-  sysCode
-);
+// app.use(
+//   count,
+//   district,
+//   gender,
+//   otpCount,
+//   otp,
+//   roles,
+//   seller,
+//   shopType,
+//   state,
+//   userCredentials,
+//   session,
+//   sysCode,
+//   globalPermissions
+// );
 console.log("Collection Created");
 
 const PORT = process.env.PORT;

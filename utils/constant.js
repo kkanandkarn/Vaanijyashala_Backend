@@ -17,6 +17,7 @@ module.exports = {
   APPLICANT: "APP",
   OTP_REGISTRATION_SUBJECT: "OTP for verification",
   SUCCESS: "success",
+  FAILURE: "failure",
   FORGOT_PASSWORD: "Forgot Password",
   UPDATE_NUMBER: "Update Number",
   PASSWORD_CHANGED: "Password changed successfully",
@@ -40,5 +41,15 @@ module.exports = {
     DELETE: "DELETE",
     EXPORT: "EXPORT",
     PROCESS: "PROCESS",
+  },
+  PERMISSIONS: {
+    ADD_USER: "ADD-USER",
+    EDIT_USER: "EDIT-USER",
+    VIEW_USER: "VIEW-USER",
+    DELETE_USER: "DELETE-USER",
+    ADD_ROLE: "ADD-ROLE",
+    VIEW_ROLE: "VIEW-ROLE",
+    EDIT_ROLE: "EDIT-ROLE",
+    DELETE_ROLE: "DELETE-ROLE",
   },
 };

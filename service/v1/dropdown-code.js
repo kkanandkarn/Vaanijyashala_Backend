@@ -30,6 +30,7 @@ const dropdownCode = async (req) => {
     }
 
     replacements["status"] = "Active";
+
     data = await collection.find(replacements).toArray();
 
     return { message: "success", data: data };

@@ -1,18 +1,12 @@
 const mongoose = require("mongoose");
 
-const roles = new mongoose.Schema(
+const globalPermissions = new mongoose.Schema(
   {
-    title: {
+    permissionName: {
       type: String,
       required: true,
       unique: true,
     },
-    permissions: [
-      {
-        type: mongoose.ObjectId,
-        ref: "globalPermissions",
-      },
-    ],
     status: {
       type: String,
       default: "Active",
@@ -22,4 +16,4 @@ const roles = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("roles", roles);
+module.exports = mongoose.model("globalPermissions", globalPermissions);
