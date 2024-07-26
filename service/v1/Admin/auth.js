@@ -1,21 +1,21 @@
 const { default: mongoose } = require("mongoose");
-const { ErrorHandler } = require("../../helper");
+const { ErrorHandler } = require("../../../helper");
 const {
   BAD_GATEWAY,
   CONFLICT,
   NOT_FOUND,
   SERVER_ERROR,
   UNAUTHORIZED,
-} = require("../../helper/status-codes");
-const { userCredentials, count, roles } = require("../../models");
-const { SERVER_ERROR_MESSAGE } = require("../../utils/constant");
-const { hashPassword, compare } = require("../../utils/hash");
+} = require("../../../helper/status-codes");
+const { userCredentials, count, roles } = require("../../../models");
+const { SERVER_ERROR_MESSAGE } = require("../../../utils/constant");
+const { hashPassword, compare } = require("../../../utils/hash");
 const {
   checkRequiredFields,
   validateEmail,
   validateOtp,
-} = require("../../utils/validations");
-const token = require("../../utils/token");
+} = require("../../../utils/validations");
+const token = require("../../../utils/token");
 
 const register = async (req) => {
   const session = await mongoose.startSession();

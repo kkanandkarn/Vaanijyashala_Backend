@@ -1,4 +1,4 @@
-const { generateOtp, verifyOtp } = require("../../service/v1");
+const { generateOtp, verifyOtp } = require("../../../service/v1");
 
 const generateOtpController = async (req, res, next) => {
   try {

@@ -1,34 +1,27 @@
 const {
-  generateOtpController,
-  verifyOtpController,
-  dropdwonCodeController,
   registerController,
   loginController,
+  getUserByTokenController,
+} = require("./auth");
+const { dropdwonCodeController } = require("./dropdwon-code");
+const { generateOtpController, verifyOtpController } = require("./otp");
+const { viewPermissionsController } = require("./permissions");
+const {
   viewRolesController,
   addPermToRoleController,
-  viewPermissionsController,
   removePermFromRoleController,
-  getUserByTokenController,
   addRoleController,
   changeRoleStatusController,
   editRoleController,
   deleteRoleController,
+} = require("./roles");
+const {
   viewUsersController,
   createUserController,
   editUserController,
   deleteUserController,
   changeUserStatusController,
-} = require("./Admin");
-const {
-  addStateController,
-  viewStatesController,
-  editStateController,
-  deleteStateController,
-  addDistrictController,
-  editDistrictController,
-  viewDistrictController,
-  deleteDistrictController,
-} = require("./State");
+} = require("./users");
 
 module.exports = {
   generateOtpController,
@@ -50,12 +43,4 @@ module.exports = {
   editUserController,
   deleteUserController,
   changeUserStatusController,
-  addStateController,
-  viewStatesController,
-  editStateController,
-  deleteStateController,
-  addDistrictController,
-  editDistrictController,
-  viewDistrictController,
-  deleteDistrictController,
 };

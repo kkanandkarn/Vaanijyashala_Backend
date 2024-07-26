@@ -5,7 +5,6 @@ const roles = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      unique: true,
     },
     permissions: [
       {
@@ -13,10 +12,22 @@ const roles = new mongoose.Schema(
         ref: "globalPermissions",
       },
     ],
+    alias: {
+      type: String,
+      required: true,
+    },
     status: {
       type: String,
       default: "Active",
       enum: ["Active", "Inactive", "Deleted"],
+    },
+    createdBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: "userCrendentials",
+    },
+    updatedBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: "userCrendentials",
     },
   },
   { timestamps: true }

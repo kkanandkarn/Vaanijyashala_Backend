@@ -19,7 +19,7 @@ const { SUCCESS } = constant;
  * @returns -> The final response with the data
  */
 
-const dispatcher = async (req, res, next, func, resource, perm) => {
+const dispatcher = async (req, res, next, func, perm) => {
   try {
     const { user } = req;
 

@@ -5,11 +5,17 @@ const state = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      unique: true,
     },
     districts: [
       {
-        type: String,
+        _id: {
+          type: mongoose.ObjectId,
+          auto: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
       },
     ],
     status: {

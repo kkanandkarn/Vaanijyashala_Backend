@@ -1,7 +1,7 @@
-const { ErrorHandler } = require("../../helper");
-const { SERVER_ERROR } = require("../../helper/status-codes");
-const { globalPermissions } = require("../../models");
-const { SERVER_ERROR_MESSAGE } = require("../../utils/constant");
+const { ErrorHandler } = require("../../../helper");
+const { SERVER_ERROR } = require("../../../helper/status-codes");
+const { globalPermissions } = require("../../../models");
+const { SERVER_ERROR_MESSAGE } = require("../../../utils/constant");
 
 const viewPermissions = async (req) => {
   try {

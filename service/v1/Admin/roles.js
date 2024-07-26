@@ -1,29 +1,51 @@
-const { ErrorHandler } = require("../../helper");
+const { ErrorHandler } = require("../../../helper");
 const {
   SERVER_ERROR,
   NOT_FOUND,
   BAD_GATEWAY,
   CONFLICT,
-} = require("../../helper/status-codes");
-const { roles } = require("../../models");
-const { SERVER_ERROR_MESSAGE } = require("../../utils/constant");
+} = require("../../../helper/status-codes");
+const { roles, userCredentials } = require("../../../models");
+const { SERVER_ERROR_MESSAGE } = require("../../../utils/constant");
+const mongoose = require("mongoose");
+const { checkRequiredFields } = require("../../../utils/validations");
 
 const addRole = async (req) => {
   try {
-    const { title, permissions = [] } = req.body;
-    if (!title || title === "") {
-      throw new ErrorHandler(BAD_GATEWAY, "Role name is required.");
+    const { title, alias, permissions = [] } = req.body;
+    const userId = req.user.userId;
+    const fieldToCheck = [
+      { value: title, error: "Role name is required." },
+      { value: alias, error: "Alias is required" },
+    ];
+    const validationError = checkRequiredFields(fieldToCheck);
+    if (validationError) {
+      throw new ErrorHandler(BAD_GATEWAY, validationError.error);
     }
-    const checkRole = await roles.findOne({ title: title });
+
+    const checkRole = await roles.findOne({
+      title: title,
+      status: { $ne: "Deleted" },
+    });
     if (checkRole) {
       throw new ErrorHandler(CONFLICT, "Role already exists.");
     }
+    const checkAlias = await roles.findOne({
+      alias: alias,
+      status: { $ne: "Deleted" },
+    });
+    if (checkAlias) {
+      throw new ErrorHandler(CONFLICT, "Duplicate alias.");
+    }
     const newRole = new roles({
       title: title,
+      alias: alias,
       permisisons: permissions,
+      createdBy: userId,
+      updatedBy: userId,
     });
     await newRole.save();
-    console.log("new role: ", newRole);
+
     return { message: "Role created successfully" };
   } catch (error) {
     if (error.statusCode) {
@@ -37,7 +59,7 @@ const addRole = async (req) => {
 const viewRoles = async (req) => {
   try {
     const fetchRoles = await roles
-      .find()
+      .find({ status: { $ne: "Deleted" } })
       .populate("permissions", "permissionName");
 
     return { roles: fetchRoles };
@@ -50,9 +72,78 @@ const viewRoles = async (req) => {
   }
 };
 
+const editRole = async (req) => {
+  try {
+    const { id, title } = req.body;
+    const userId = req.user.userId;
+    const filedsToCheck = [
+      { value: id, error: "id is required" },
+      { value: title, error: "Role name is required" },
+    ];
+    const validationError = checkRequiredFields(filedsToCheck);
+    if (validationError) {
+      throw new ErrorHandler(BAD_GATEWAY, validationError.error);
+    }
+    const role = await roles.findById(id);
+    if (!role) {
+      throw new ErrorHandler(NOT_FOUND, "Role not found");
+    }
+
+    await roles.findByIdAndUpdate(id, {
+      title: title,
+      updatedBy: userId,
+      updatedAt: new Date(),
+    });
+    return { message: "Role Updated" };
+  } catch (error) {
+    if (error.statusCode) {
+      throw new ErrorHandler(error.statusCode, error.message);
+    }
+    console.log(error);
+    throw new ErrorHandler(SERVER_ERROR, SERVER_ERROR_MESSAGE);
+  }
+};
+
+const deleteRole = async (req) => {
+  try {
+    const { id } = req.body;
+    const userId = req.user.userId;
+    if (!id || id === "") {
+      throw new ErrorHandler(BAD_GATEWAY, "id is required");
+    }
+    const role = await roles.findOne({
+      _id: id,
+      status: { $ne: "Deleted" },
+    });
+    if (!role) {
+      throw new ErrorHandler(NOT_FOUND, "No role found");
+    }
+    const checkUser = await userCredentials.findOne({
+      role: role._id,
+      status: { $ne: "Deleted" },
+    });
+    if (checkUser) {
+      throw new ErrorHandler(BAD_GATEWAY, "Cannot delete role having users.");
+    }
+    await roles.findByIdAndUpdate(id, {
+      status: "Deleted",
+      updatedBy: userId,
+      updatedAt: new Date(),
+    });
+    return { message: "Role Deleted" };
+  } catch (error) {
+    if (error.statusCode) {
+      throw new ErrorHandler(error.statusCode, error.message);
+    }
+    console.log(error);
+    throw new ErrorHandler(SERVER_ERROR, SERVER_ERROR_MESSAGE);
+  }
+};
+
 const addPermToRole = async (req) => {
   try {
     const { roleId, permissionsArray = [] } = req.body;
+    const userId = req.user.userId;
     if (!roleId || roleId === "") {
       throw new ErrorHandler(BAD_GATEWAY, "Role id is required.");
     }
@@ -63,6 +154,8 @@ const addPermToRole = async (req) => {
     if (!role) {
       throw new ErrorHandler(NOT_FOUND, "No role found");
     }
+    role.updatedAt = new Date();
+    role.updatedBy = userId;
     role.permissions.push(...permissionsArray);
     const updatedRole = await role.save();
     return { roles: updatedRole };
@@ -75,11 +168,10 @@ const addPermToRole = async (req) => {
   }
 };
 
-const mongoose = require("mongoose");
-
 const removePermFromRole = async (req) => {
   try {
     const { roleId, permissionsArray = [] } = req.body;
+    const userId = req.user.userId;
 
     if (!roleId || roleId === "") {
       console.log("Role id is missing or empty.");
@@ -109,8 +201,9 @@ const removePermFromRole = async (req) => {
           permToRemove.equals(permission)
         )
     );
+    role.updatedAt = new Date();
+    role.updatedBy = userId;
 
-    console.log(`Updated permissions: ${role.permissions}`);
     const updatedRole = await role.save();
 
     return { roles: updatedRole };
@@ -126,6 +219,7 @@ const removePermFromRole = async (req) => {
 const changeRoleStatus = async (req) => {
   try {
     const { roleId } = req.body;
+    const userId = req.user.userId;
     if (!roleId || roleId === "") {
       throw new ErrorHandler(BAD_GATEWAY, "Role id is required");
     }
@@ -134,7 +228,11 @@ const changeRoleStatus = async (req) => {
       throw new ErrorHandler(NOT_FOUND, "Role not found");
     }
     const newStatus = role.status === "Active" ? "Inactive" : "Active";
-    await roles.findByIdAndUpdate(roleId, { status: newStatus });
+    await roles.findByIdAndUpdate(roleId, {
+      status: newStatus,
+      updatedBy: userId,
+      updatedAt: new Date(),
+    });
     return { message: "Status Updated" };
   } catch (error) {
     if (error.statusCode) {
@@ -151,4 +249,6 @@ module.exports = {
   addPermToRole,
   removePermFromRole,
   changeRoleStatus,
+  editRole,
+  deleteRole,
 };

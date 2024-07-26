@@ -1,4 +1,4 @@
-const { viewPermissions } = require("../../service/v1");
+const { viewPermissions } = require("../../../service/v1");
 
 const viewPermissionsController = async (req, res, next) => {
   try {
@@ -10,5 +10,5 @@ const viewPermissionsController = async (req, res, next) => {
 };
 
 module.exports = {
-    viewPermissionsController
-}
+  viewPermissionsController,
+};

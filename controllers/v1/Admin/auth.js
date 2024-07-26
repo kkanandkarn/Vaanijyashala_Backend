@@ -1,4 +1,4 @@
-const { register, login, getUserByToken } = require("../../service/v1");
+const { register, login, getUserByToken } = require("../../../service/v1");
 
 const registerController = async (req, res, next) => {
   try {

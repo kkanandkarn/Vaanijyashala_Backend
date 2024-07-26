@@ -70,7 +70,7 @@ app.use((err, req, res, next) => {
 //   sysCode,
 //   globalPermissions
 // );
-console.log("Collection Created");
+// console.log("Collection Created");
 
 const PORT = process.env.PORT;
 
