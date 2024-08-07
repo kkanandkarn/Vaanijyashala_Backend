@@ -1,7 +1,6 @@
 const {
   addRole,
-  generateOtp,
-  verifyOtp,
+
   dropdownCode,
   register,
   login,
@@ -19,6 +18,23 @@ const {
   deleteUser,
   changeUserStatus,
 } = require("./Admin");
+const { dropdown } = require("./dropdown");
+const { generateOtp, verifyOtp } = require("./otp");
+const {
+  sellerProfile,
+  addEmployee,
+  addProduct,
+  sellerViewProducts,
+  sellerViewProductById,
+  sellerViewEmployees,
+  sellerEditEmployee,
+  sellerViewEmployeeById,
+  sellerDeleteEmployee,
+  sellerEditProduct,
+  sellerDeleteProduct,
+  sellerViewProfile,
+  sellerEditProfile,
+} = require("./Seller");
 const {
   addState,
   viewStates,
@@ -31,6 +47,7 @@ const {
 } = require("./State");
 
 module.exports = {
+  dropdown,
   addRole,
   generateOtp,
   verifyOtp,
@@ -58,4 +75,17 @@ module.exports = {
   editDistrict,
   viewDistrict,
   deleteDistrict,
+  sellerProfile,
+  addEmployee,
+  addProduct,
+  sellerViewProducts,
+  sellerViewProductById,
+  sellerEditProduct,
+  sellerDeleteProduct,
+  sellerViewEmployees,
+  sellerViewEmployeeById,
+  sellerEditEmployee,
+  sellerDeleteEmployee,
+  sellerViewProfile,
+  sellerEditProfile,
 };

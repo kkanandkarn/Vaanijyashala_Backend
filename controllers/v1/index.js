@@ -19,6 +19,22 @@ const {
   deleteUserController,
   changeUserStatusController,
 } = require("./Admin");
+const { dropdownController } = require("./dropdown");
+const {
+  sellerProfileController,
+  addEmployeeController,
+  addProductController,
+  sellerViewProductsController,
+  sellerViewProductByIdController,
+  sellerViewEmployeesController,
+  sellerEditEmployeeController,
+  sellerViewEmployeeByIdController,
+  sellerDeleteEmployeeController,
+  sellerEditProductController,
+  sellerDeleteProductController,
+  sellerViewProfileController,
+  sellerEditProfileController,
+} = require("./Seller");
 const {
   addStateController,
   viewStatesController,
@@ -31,6 +47,7 @@ const {
 } = require("./State");
 
 module.exports = {
+  dropdownController,
   generateOtpController,
   verifyOtpController,
   dropdwonCodeController,
@@ -58,4 +75,17 @@ module.exports = {
   editDistrictController,
   viewDistrictController,
   deleteDistrictController,
+  sellerProfileController,
+  addEmployeeController,
+  addProductController,
+  sellerViewProductsController,
+  sellerViewProductByIdController,
+  sellerEditProductController,
+  sellerDeleteProductController,
+  sellerViewEmployeesController,
+  sellerViewEmployeeByIdController,
+  sellerEditEmployeeController,
+  sellerDeleteEmployeeController,
+  sellerViewProfileController,
+  sellerEditProfileController,
 };

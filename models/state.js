@@ -6,18 +6,7 @@ const state = new mongoose.Schema(
       type: String,
       required: true,
     },
-    districts: [
-      {
-        _id: {
-          type: mongoose.ObjectId,
-          auto: true,
-        },
-        name: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
+
     status: {
       type: String,
       default: "Active",

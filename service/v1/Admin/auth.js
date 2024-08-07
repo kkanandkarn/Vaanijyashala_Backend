@@ -6,6 +6,7 @@ const {
   NOT_FOUND,
   SERVER_ERROR,
   UNAUTHORIZED,
+  FORBIDDEN,
 } = require("../../../helper/status-codes");
 const { userCredentials, count, roles } = require("../../../models");
 const { SERVER_ERROR_MESSAGE } = require("../../../utils/constant");
@@ -51,6 +52,13 @@ const register = async (req) => {
     if (!verifyOTP.success) {
       throw new ErrorHandler(BAD_GATEWAY, "please verify otp to continue.");
     }
+    const checkRole = await roles.findOne({
+      _id: role,
+      status: { $ne: "Deleted" },
+    });
+    if (!checkRole) {
+      throw new ErrorHandler(BAD_GATEWAY, "Invalid role");
+    }
     const hashedPassword = await hashPassword(password);
     let newUser;
 
@@ -89,21 +97,25 @@ const register = async (req) => {
       });
       await newUser.save({ session });
     }
-    const Count = await count.findOne({ status: "Active" });
 
-    const userCount = Count.usersCount + 1;
-    const sellerCount = Count.sellerCount + 1;
-    await count.findByIdAndUpdate(
-      Count._id,
-      { userCount: userCount, sellerCount: sellerCount, updatedAt: Date.now() },
-      { new: true, session }
-    );
-    const uniqueId = `VSM${100 + sellerCount}`;
-    const newReferralCode = `VSMR${100 + sellerCount}`;
+    const count = await userCredentials.countDocuments({ role: role });
+    const alias = checkRole.alias;
+
+    const totalUser = await userCredentials.countDocuments();
+
+    const uniqueId = `${alias}${101 + count}`;
+
+    const newReferralCode = `VSR${100 + totalUser}`;
 
     await userCredentials.findOneAndUpdate(
       { email: email },
-      { $set: { uniqueId: uniqueId, referralCode: newReferralCode } },
+      {
+        $set: {
+          uniqueId: uniqueId,
+          tenantId: newUser._id,
+          referralCode: newReferralCode,
+        },
+      },
       { new: true, session }
     );
     const findRole = await roles.findById(role);
@@ -163,15 +175,24 @@ const login = async (req) => {
     if (!verifyPassword) {
       throw new ErrorHandler(UNAUTHORIZED, "Invalid email or password");
     }
+    if (user.status === "Suspended" || user.status === "Deleted") {
+      throw new ErrorHandler(
+        FORBIDDEN,
+        "Your account is suspended. Contact us for further information."
+      );
+    }
+
+    const Token = token(user._id, user.role.title);
 
     const returnUser = {
       userId: user._id,
       userName: user.name,
       userEmail: user.email,
       role: user.role.title,
+      userStatus: user.status,
       permissions: user.role.permissions,
     };
-    const Token = token(user._id, user.role.title);
+
     return { message: "Login successfull", user: returnUser, token: Token };
   } catch (error) {
     if (error.statusCode) {

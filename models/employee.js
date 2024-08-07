@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
 
-const Seller = new mongoose.Schema(
+const Employee = new mongoose.Schema(
   {
+    tenantId: {
+      type: mongoose.ObjectId,
+      ref: "userCrendentials",
+    },
     userId: {
       type: mongoose.ObjectId,
       ref: "userCrendentials",
@@ -10,6 +14,7 @@ const Seller = new mongoose.Schema(
     profileImg: {
       type: String,
     },
+
     dateOfBirth: {
       type: Date,
       required: true,
@@ -24,13 +29,8 @@ const Seller = new mongoose.Schema(
     altMobileNumber: {
       type: String,
     },
-    shopLocality: {
+    addressLine1: {
       type: String,
-      required: true,
-    },
-    shopCategory: {
-      type: mongoose.ObjectId,
-      ref: "shopCategory",
       required: true,
     },
     state: {
@@ -42,15 +42,30 @@ const Seller = new mongoose.Schema(
       type: mongoose.ObjectId,
       ref: "district",
     },
-    pinCode: {
+    permissions: [
+      {
+        type: mongoose.ObjectId,
+        ref: "globalPermissions",
+      },
+    ],
+    idFile: {
       type: String,
-      required: true,
     },
-    gstNo: {
+    status: {
       type: String,
+      default: "Active",
+      enum: ["Active", "Hold", "Suspended", "Inactive", "Deleted"],
+    },
+    createdBy: {
+      type: mongoose.ObjectId,
+      ref: "userCrendentials",
+    },
+    updatedBy: {
+      type: mongoose.ObjectId,
+      ref: "userCrendentials",
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Seller", Seller);
+module.exports = mongoose.model("Employee", Employee);

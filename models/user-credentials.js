@@ -40,6 +40,9 @@ const userCrendentials = new mongoose.Schema(
     isAgreeTermsCondition: {
       type: Boolean,
     },
+    tenantId: {
+      type: mongoose.ObjectId,
+    },
     status: {
       type: String,
       default: "Active",

@@ -19,7 +19,7 @@ const roles = new mongoose.Schema(
     status: {
       type: String,
       default: "Active",
-      enum: ["Active", "Inactive", "Deleted"],
+      enum: ["Active", "Private", "Inactive", "Deleted"],
     },
     createdBy: {
       type: mongoose.Schema.ObjectId,

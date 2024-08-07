@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const { ErrorHandler } = require("../../../helper");
 const {
   SERVER_ERROR,
@@ -5,11 +6,13 @@ const {
   CONFLICT,
   NOT_FOUND,
 } = require("../../../helper/status-codes");
-const { state } = require("../../../models");
+const { state, district } = require("../../../models");
 const { SERVER_ERROR_MESSAGE } = require("../../../utils/constant");
 const { checkRequiredFields } = require("../../../utils/validations");
 
 const addState = async (req) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { stateName, districts = [] } = req.body;
     const userId = req.user.userId;
@@ -33,7 +36,6 @@ const addState = async (req) => {
       );
     }
 
-    // Check if the state already exists
     const checkState = await state.findOne({
       title: stateName,
       status: { $ne: "Deleted" },
@@ -43,39 +45,44 @@ const addState = async (req) => {
       throw new ErrorHandler(CONFLICT, "State already exists.");
     }
 
-    // Check for duplicate districts in the database
-    // const existingStates = await state
-    //   .find({ status: { $ne: "Deleted" } })
-    //   .select("districts")
-    //   .lean();
-    // const allExistingDistricts = existingStates.flatMap((s) => s.districts);
-
-    // const duplicateDistrictsInDB = districts.filter((district) =>
-    //   allExistingDistricts.includes(district)
-    // );
-
-    // if (duplicateDistrictsInDB.length > 0) {
-    //   throw new ErrorHandler(
-    //     CONFLICT,
-    //     `Duplicate districts found in database: ${duplicateDistrictsInDB.join(
-    //       ", "
-    //     )}`
-    //   );
-    // }
-    const districtObjects = districts.map((districtName) => ({
-      name: districtName,
-    }));
-
     const newState = new state({
       title: stateName,
-      districts: districtObjects,
       createdBy: userId,
       updatedBy: userId,
     });
 
-    await newState.save();
+    await newState.save({ session });
+
+    const stateId = newState._id;
+
+    await Promise.all(
+      await districts.map(async (districtName) => {
+        const checkDistrict = await district.findOne({
+          title: districtName,
+          stateId: stateId,
+          status: { $ne: "Deleted" },
+        });
+        if (checkDistrict) {
+          throw new ErrorHandler(BAD_GATEWAY, "District already exists");
+        } else {
+          const newDistrict = new district({
+            title: districtName,
+            stateId: stateId,
+            createdBy: userId,
+            updatedBy: userId,
+          });
+          await newDistrict.save({ session });
+        }
+      })
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
     return { message: "State Added" };
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     if (error.statusCode) {
       throw new ErrorHandler(error.statusCode, error.message);
     }
@@ -87,27 +94,32 @@ const addState = async (req) => {
 const viewStates = async (req) => {
   try {
     const states = await state.aggregate([
-      // Match states that are not deleted
       {
         $match: {
-          status: { $ne: "Deleted" },
+          status: "Active",
         },
       },
-      // Unwind the districts array
-      {
-        $unwind: {
-          path: "$districts",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      // Sort by state title and district name
       {
         $sort: {
           title: 1,
-          "districts.name": 1,
         },
       },
-      // Group back into state objects with sorted districts
+      {
+        $lookup: {
+          from: "districts",
+          localField: "_id",
+          foreignField: "stateId",
+          as: "districts",
+        },
+      },
+      {
+        $unwind: "$districts",
+      },
+      {
+        $match: {
+          "districts.status": "Active",
+        },
+      },
       {
         $group: {
           _id: "$_id",
@@ -115,14 +127,18 @@ const viewStates = async (req) => {
           status: { $first: "$status" },
           createdBy: { $first: "$createdBy" },
           updatedBy: { $first: "$updatedBy" },
-          districts: {
-            $push: "$districts",
-          },
           createdAt: { $first: "$createdAt" },
           updatedAt: { $first: "$updatedAt" },
+          districts: { $push: "$districts" },
         },
       },
-      // Sort the states
+      {
+        $addFields: {
+          districts: {
+            $sortArray: { input: "$districts", sortBy: { title: 1 } },
+          },
+        },
+      },
       {
         $sort: {
           title: 1,
@@ -193,6 +209,15 @@ const deleteState = async (req) => {
       updatedBy: userId,
       updatedAt: new Date(),
     });
+
+    await district.updateMany(
+      { stateId: id },
+      {
+        status: "Deleted",
+        updatedBy: userId,
+        updatedAt: new Date(),
+      }
+    );
     return { message: "State deleted successfully" };
   } catch (error) {
     if (error.statusCode) {

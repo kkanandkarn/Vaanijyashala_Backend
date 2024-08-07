@@ -11,6 +11,9 @@ const userCredentials = require("./user-credentials");
 const session = require("./session");
 const sysCode = require("./sys-code");
 const globalPermissions = require("./global-permissions");
+const employee = require("./employee");
+const product = require("./product");
+const DropdownQuery = require("./dropdown-query");
 
 module.exports = {
   count,
@@ -26,4 +29,7 @@ module.exports = {
   session,
   sysCode,
   globalPermissions,
+  employee,
+  product,
+  DropdownQuery,
 };
