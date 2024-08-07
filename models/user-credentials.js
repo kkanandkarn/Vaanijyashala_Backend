@@ -19,7 +19,7 @@ const userCrendentials = new mongoose.Schema(
       required: true,
     },
     role: {
-      type: mongoose.ObjectId,
+      type: mongoose.Schema.ObjectId,
       ref: "roles",
     },
     isLogin: {
@@ -44,6 +44,14 @@ const userCrendentials = new mongoose.Schema(
       type: String,
       default: "Active",
       enum: ["Active", "Hold", "Suspended", "Deleted"],
+    },
+    createdBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: "userCrendentials",
+    },
+    updatedBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: "userCrendentials",
     },
   },
   { timestamps: true }

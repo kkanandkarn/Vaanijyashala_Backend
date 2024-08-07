@@ -1,4 +1,4 @@
-const { dropdownCode } = require("../../service/v1");
+const { dropdownCode } = require("../../../service/v1");
 
 const dropdwonCodeController = async (req, res, next) => {
   try {

@@ -1,21 +1,21 @@
 const { default: mongoose } = require("mongoose");
-const { ErrorHandler } = require("../../helper");
+const { ErrorHandler } = require("../../../helper");
 const {
   BAD_GATEWAY,
   CONFLICT,
   NOT_FOUND,
   SERVER_ERROR,
   UNAUTHORIZED,
-} = require("../../helper/status-codes");
-const { userCredentials, count, roles } = require("../../models");
-const { SERVER_ERROR_MESSAGE } = require("../../utils/constant");
-const { hashPassword, compare } = require("../../utils/hash");
+} = require("../../../helper/status-codes");
+const { userCredentials, count, roles } = require("../../../models");
+const { SERVER_ERROR_MESSAGE } = require("../../../utils/constant");
+const { hashPassword, compare } = require("../../../utils/hash");
 const {
   checkRequiredFields,
   validateEmail,
   validateOtp,
-} = require("../../utils/validations");
-const token = require("../../utils/token");
+} = require("../../../utils/validations");
+const token = require("../../../utils/token");
 
 const register = async (req) => {
   const session = await mongoose.startSession();
@@ -144,13 +144,18 @@ const login = async (req) => {
     if (validationError) {
       throw new ErrorHandler(BAD_GATEWAY, validationError.error);
     }
-    const isValidEMail = validateEmail(email);
-    if (!isValidEMail) {
-      throw new ErrorHandler(BAD_GATEWAY, "Invalid email");
-    }
+
     const user = await userCredentials
       .findOne({ email: email })
-      .populate("role");
+      .populate({
+        path: "role",
+        populate: {
+          path: "permissions",
+          model: "globalPermissions",
+        },
+      })
+      .exec();
+
     if (!user) {
       throw new ErrorHandler(UNAUTHORIZED, "Invalid email or password");
     }
@@ -164,6 +169,7 @@ const login = async (req) => {
       userName: user.name,
       userEmail: user.email,
       role: user.role.title,
+      permissions: user.role.permissions,
     };
     const Token = token(user._id, user.role.title);
     return { message: "Login successfull", user: returnUser, token: Token };
@@ -176,7 +182,41 @@ const login = async (req) => {
   }
 };
 
+const getUserByToken = async (req) => {
+  try {
+    const userId = req.user.userId;
+    const user = await userCredentials
+      .findOne({ _id: userId })
+      .populate({
+        path: "role",
+        populate: {
+          path: "permissions",
+          model: "globalPermissions",
+        },
+      })
+      .exec();
+    if (!user) {
+      throw new ErrorHandler(NOT_FOUND, "No user found");
+    }
+    const returnUser = {
+      userId: user._id,
+      userName: user.name,
+      userEmail: user.email,
+      role: user.role.title,
+      permissions: user.role.permissions,
+    };
+    return { user: returnUser };
+  } catch (error) {
+    if (error.statusCode) {
+      throw new ErrorHandler(error.statusCode, error.message);
+    }
+    console.log(error);
+    throw new ErrorHandler(SERVER_ERROR, SERVER_ERROR_MESSAGE);
+  }
+};
+
 module.exports = {
   register,
   login,
+  getUserByToken,
 };

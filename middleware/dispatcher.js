@@ -1,5 +1,6 @@
 const { statusCodes, ErrorHandler, casbinEnforcer } = require("../helper");
 const { constant, camelize } = require("../utils");
+const { matchPermission } = require("../utils/match-permission");
 
 const { OK, UNAUTHORIZED } = statusCodes;
 const { SUCCESS } = constant;
@@ -18,21 +19,15 @@ const { SUCCESS } = constant;
  * @returns -> The final response with the data
  */
 
-const dispatcher = async (req, res, next, func, resource, perm) => {
+const dispatcher = async (req, res, next, func, perm) => {
   try {
     const { user } = req;
 
     if (perm) {
-      let enforcer = await casbinEnforcer;
-      const checkPerm = await enforcer.enforce(
-        user.userId,
-        resource,
-        perm,
-        user.role
-      );
-
-      if (!checkPerm) throw new ErrorHandler(UNAUTHORIZED, "Unauthorized");
+      const checkPerm = await matchPermission(req, user.role, perm);
+      if (!checkPerm) throw new ErrorHandler(UNAUTHORIZED, "Not permitted");
     }
+
     const data = await func(req, res, next);
 
     if (data != null) {

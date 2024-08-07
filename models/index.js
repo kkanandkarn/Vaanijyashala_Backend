@@ -10,6 +10,7 @@ const state = require("./state");
 const userCredentials = require("./user-credentials");
 const session = require("./session");
 const sysCode = require("./sys-code");
+const globalPermissions = require("./global-permissions");
 
 module.exports = {
   count,
@@ -24,4 +25,5 @@ module.exports = {
   userCredentials,
   session,
   sysCode,
+  globalPermissions,
 };

@@ -1,8 +1,8 @@
-const { ErrorHandler } = require("../../helper");
-const { BAD_GATEWAY, SERVER_ERROR } = require("../../helper/status-codes");
-const { sysCode } = require("../../models");
+const { ErrorHandler } = require("../../../helper");
+const { BAD_GATEWAY, SERVER_ERROR } = require("../../../helper/status-codes");
+const { sysCode } = require("../../../models");
 const mongoose = require("mongoose");
-const { SERVER_ERROR_MESSAGE } = require("../../utils/constant");
+const { SERVER_ERROR_MESSAGE } = require("../../../utils/constant");
 
 const dropdownCode = async (req) => {
   try {
@@ -30,6 +30,7 @@ const dropdownCode = async (req) => {
     }
 
     replacements["status"] = "Active";
+
     data = await collection.find(replacements).toArray();
 
     return { message: "success", data: data };

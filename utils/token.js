@@ -3,6 +3,6 @@ const users = require("../helper/users");
 
 const { USER } = users;
 
-module.exports = function (id, userType = USER) {
-  return jwt.sign({ userId: id, userType }, process.env.JWT_PRIVATE_KEY);
+module.exports = function (id, role) {
+  return jwt.sign({ userId: id, role }, process.env.JWT_PRIVATE_KEY);
 };
