@@ -1,17 +1,17 @@
-const { ErrorHandler } = require("../../../helper");
+const { ErrorHandler } = require("../../helper");
 const {
   SERVER_ERROR,
   BAD_GATEWAY,
   NOT_FOUND,
   CONFLICT,
-} = require("../../../helper/status-codes");
-const { userCredentials, session, otp, otpCount } = require("../../../models");
+} = require("../../helper/status-codes");
+const { userCredentials, session, otp, otpCount } = require("../../models");
 const {
   SERVER_ERROR_MESSAGE,
   RESEND_OTP_COUNT,
-} = require("../../../utils/constant");
-const sendHtml = require("../../../utils/mail");
-const { checkRequiredFields } = require("../../../utils/validations");
+} = require("../../utils/constant");
+const sendHtml = require("../../utils/mail");
+const { checkRequiredFields } = require("../../utils/validations");
 const path = require("path");
 const ejs = require("ejs");
 const moment = require("moment");
@@ -73,6 +73,7 @@ const generateOtp = async (req) => {
     const htmlContent = await ejs.renderFile(templatePath, data);
     const subject = "OTP for registration";
     // await sendHtml(email, subject, htmlContent);
+    console.log(OTP);
 
     const Otp = new otp({
       email: email,

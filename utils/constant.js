@@ -25,6 +25,9 @@ module.exports = {
   SERVER_ERROR_MESSAGE: "Internal Server Error",
   MAX_OTP_COUNT_TIME: 10,
   RESEND_OTP_COUNT: 3,
+  allowedImageTypes: ["image/jpeg", "image/png", "image/jpg"],
+  MAX_FILE_SIZE_MB: 5,
+  MAX_FILE_SIZE_BYTES: 5 * 1024 * 1024,
   MESSAGE_TEMPLATE_TYPES: {
     REGISTRATION_OTP: "REGISTRATION_OTP",
     LOGIN: "LOGIN",
@@ -71,5 +74,8 @@ module.exports = {
     VIEW_DISTRICT: "VIEW-DISTRICT",
     DELETE_DISTRICT: "DELETE-DISTRICT",
     VIEW_PERMISISONS: "VIEW-PERMISSIONS",
+    ADD_PROFILE: "ADD-PROFILE",
+    VIEW_PROFILE: "VIEW-PROFILE",
+    EDIT_PROFILE: "EDIT-PROFILE",
   },
 };

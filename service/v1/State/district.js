@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const { ErrorHandler } = require("../../../helper");
 const {
   SERVER_ERROR,
@@ -10,6 +11,8 @@ const { SERVER_ERROR_MESSAGE } = require("../../../utils/constant");
 const { checkRequiredFields } = require("../../../utils/validations");
 
 const addDistrict = async (req) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { stateId, districts = [] } = req.body;
     const userId = req.user.userId;
@@ -41,35 +44,43 @@ const addDistrict = async (req) => {
       );
     }
 
-    // Check for duplicate districts in the database
-    const existingDistrict = await state
-      .findOne({ _id: stateId, status: { $ne: "Deleted" } })
-      .select("districts")
-      .lean();
+    const duplicateDistricts = [];
 
-    const existingDistrictNames = existingDistrict.districts.map((d) => d.name);
-
-    const duplicateDistrictsInDB = districts.filter((district) =>
-      existingDistrictNames.includes(district)
+    await Promise.all(
+      districts.map(async (districtName) => {
+        const checkDistrict = await district.findOne({
+          title: districtName,
+          stateId: stateId,
+          status: { $ne: "Deleted" },
+        });
+        if (checkDistrict) {
+          duplicateDistricts.push(districtName);
+        } else {
+          const newDistrict = new district({
+            title: districtName,
+            stateId: stateId,
+            createdBy: userId,
+            updatedBy: userId,
+          });
+          await newDistrict.save({ session });
+        }
+      })
     );
 
-    if (duplicateDistrictsInDB.length > 0) {
+    if (duplicateDistricts.length) {
       throw new ErrorHandler(
         CONFLICT,
-        `District(s) already exists: ${duplicateDistrictsInDB.join(", ")} `
+        `District(s) already exists: ${duplicateDistricts}`
       );
     }
-    const newDistricts = districts.map((district) => ({ name: district }));
-    await state.updateOne(
-      { _id: stateId },
-      {
-        $push: { districts: { $each: newDistricts } },
-        $set: { updatedBy: userId, updatedAt: new Date() },
-      }
-    );
+
+    await session.commitTransaction();
+    session.endSession();
 
     return { message: "district added" };
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     if (error.statusCode) {
       throw new ErrorHandler(error.statusCode, error.message);
     }
@@ -99,42 +110,30 @@ const editDistrict = async (req) => {
       throw new ErrorHandler(NOT_FOUND, "State not found");
     }
 
-    console.log(checkState);
+    const checkDistrict = await district.findOne({
+      _id: districtId,
+      stateId: stateId,
+      status: { $ne: "Deleted" },
+    });
 
-    const existingDistrict = checkState.districts.find(
-      (district) => district._id.toString() === districtId
-    );
-
-    console.log("existingDistrict=> ", existingDistrict);
-
-    if (!existingDistrict) {
-      throw new ErrorHandler(
-        NOT_FOUND,
-        "District not found in the specified state"
-      );
+    if (!checkDistrict) {
+      throw new ErrorHandler(NOT_FOUND, "District not found");
     }
 
-    // Check for duplicate district names
-    const duplicateDistrictName = checkState.districts.some(
-      (district) => district.name === districtName
-    );
-    console.log("duplicateDistrictName => ", duplicateDistrictName);
+    const checkDuplicacy = await district.findOne({
+      title: districtName,
+      stateId: stateId,
+      status: { $ne: "Deleted" },
+    });
 
-    if (duplicateDistrictName) {
-      throw new ErrorHandler(CONFLICT, "Duplicate district name found");
+    if (checkDuplicacy) {
+      throw new ErrorHandler(CONFLICT, "District already exists");
     }
-
-    // Update the district name
-    await state.updateOne(
-      { _id: stateId, "districts._id": districtId },
-      {
-        $set: {
-          "districts.$.name": districtName,
-          updatedBy: userId,
-          updatedAt: new Date(),
-        },
-      }
-    );
+    await district.findByIdAndUpdate(districtId, {
+      title: districtName,
+      updatedBy: userId,
+      updatedAt: new Date(),
+    });
 
     return { message: "District name updated successfully" };
   } catch (error) {
@@ -161,16 +160,14 @@ const viewDistrict = async (req) => {
       throw new ErrorHandler(NOT_FOUND, "No state found");
     }
 
-    console.log("old state data => ", stateData);
-
-    const sortedDistricts = stateData.districts.sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-    console.log("sortedDistricts=>  ", sortedDistricts);
-    stateData["districts"] = sortedDistricts;
-    console.log("new state => ", stateData);
+    const districts = await district
+      .find({
+        stateId: stateId,
+        status: { $ne: "Deleted" },
+      })
+      .sort({ title: 1 });
     return {
-      districts: stateData,
+      districts: districts,
     };
   } catch (error) {
     if (error.statusCode) {
@@ -201,25 +198,21 @@ const deleteDistrict = async (req) => {
       throw new ErrorHandler(NOT_FOUND, "State not found");
     }
 
-    const existingDistrict = checkState.districts.find(
-      (district) => district._id.toString() === districtId
-    );
+    const checkDistrict = await district.findOne({
+      _id: districtId,
+      stateId: stateId,
+      status: { $ne: "Deleted" },
+    });
 
-    if (!existingDistrict) {
-      throw new ErrorHandler(
-        NOT_FOUND,
-        "District not found in the specified state"
-      );
+    if (!checkDistrict) {
+      throw new ErrorHandler(NOT_FOUND, "District not found");
     }
 
-    // Remove the district from the state's districts array
-    await state.updateOne(
-      { _id: stateId },
-      {
-        $pull: { districts: { _id: districtId } },
-        $set: { updatedBy: userId, updatedAt: new Date() },
-      }
-    );
+    await district.findByIdAndUpdate(districtId, {
+      status: "Deleted",
+      updatedBy: userId,
+      updatedAt: new Date(),
+    });
 
     return { message: "District deleted successfully" };
   } catch (error) {

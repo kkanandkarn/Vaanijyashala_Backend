@@ -27,6 +27,9 @@ const {
   session,
   sysCode,
   globalPermissions,
+  employee,
+  product,
+  DropdownQuery,
 } = require("./models");
 
 const app = express();
@@ -55,22 +58,25 @@ app.use((err, req, res, next) => {
   handleError(err, res);
 });
 
-// app.use(
-//   count,
-//   district,
-//   gender,
-//   otpCount,
-//   otp,
-//   roles,
-//   seller,
-//   shopType,
-//   state,
-//   userCredentials,
-//   session,
-//   sysCode,
-//   globalPermissions
-// );
-// console.log("Collection Created");
+app.use(
+  count,
+  district,
+  gender,
+  otpCount,
+  otp,
+  roles,
+  seller,
+  shopType,
+  state,
+  userCredentials,
+  session,
+  sysCode,
+  globalPermissions,
+  employee,
+  product,
+  DropdownQuery
+);
+console.log("Collection Created");
 
 const PORT = process.env.PORT;
 

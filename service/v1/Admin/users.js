@@ -47,8 +47,10 @@ const createUser = async (req) => {
     const hashedPassword = await hashPassword(password);
     const alias = checkRole.alias;
     const count = await userCredentials.countDocuments({ role: role });
+    const totalUser = await userCredentials.countDocuments();
 
     const uniqueId = `${alias}${101 + count}`;
+    const newReferralCode = `VSR${100 + totalUser}`;
 
     const newUser = new userCredentials({
       uniqueId: uniqueId,
@@ -57,11 +59,12 @@ const createUser = async (req) => {
       password: hashedPassword,
       role: role,
       isLogin: false,
-      referralCode: "",
+      referralCode: newReferralCode,
       referredUsers: 0,
       createdBy: userId,
       updatedBy: userId,
     });
+
     await newUser.save({ session });
 
     await session.commitTransaction();

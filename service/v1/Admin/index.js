@@ -1,6 +1,6 @@
 const { register, login, getUserByToken } = require("./auth");
 const dropdownCode = require("./dropdown-code");
-const { generateOtp, verifyOtp } = require("./otp");
+
 const { viewPermissions } = require("./permissions");
 const {
   viewRoles,
@@ -21,8 +21,7 @@ const {
 
 module.exports = {
   addRole,
-  generateOtp,
-  verifyOtp,
+
   dropdownCode,
   register,
   login,

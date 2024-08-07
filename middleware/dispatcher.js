@@ -1,4 +1,6 @@
 const { statusCodes, ErrorHandler, casbinEnforcer } = require("../helper");
+const { FORBIDDEN } = require("../helper/status-codes");
+const { userCredentials } = require("../models");
 const { constant, camelize } = require("../utils");
 const { matchPermission } = require("../utils/match-permission");
 
@@ -22,19 +24,34 @@ const { SUCCESS } = constant;
 const dispatcher = async (req, res, next, func, perm) => {
   try {
     const { user } = req;
+    let userStatus = null;
 
     if (perm) {
       const checkPerm = await matchPermission(req, user.role, perm);
       if (!checkPerm) throw new ErrorHandler(UNAUTHORIZED, "Not permitted");
+    }
+    if (user) {
+      const userId = req.user.userId;
+      const findUser = await userCredentials.findOne({ _id: userId });
+      userStatus = findUser.status;
+      if (userStatus === "Suspended" || userStatus === "Deleted") {
+        throw new ErrorHandler(
+          FORBIDDEN,
+          "Your account is suspended. Contact us for further information."
+        );
+      }
     }
 
     const data = await func(req, res, next);
 
     if (data != null) {
       const camelData = await camelize(data);
-      return res
-        .status(OK)
-        .json({ status: SUCCESS, statusCode: 200, data: camelData });
+      return res.status(OK).json({
+        status: SUCCESS,
+        userStatus: userStatus,
+        statusCode: 200,
+        data: camelData,
+      });
     }
   } catch (err) {
     next(err);
